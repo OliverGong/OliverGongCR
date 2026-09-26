@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能补齐 - Resume AI Manager</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* AI Assist Page Styles */
+    .ai-assist-layout {
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: var(--space-6);
+      height: calc(100vh - var(--header-height) - var(--space-12));
+      min-height: 600px;
+    }
+
+    .config-panel,
+    .result-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .config-panel .card,
+    .result-panel .card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .config-panel .card-body,
+    .result-panel .card-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* Radio group */
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      background: var(--color-bg-elevated);
+    }
+
+    .radio-item:hover {
+      border-color: var(--color-border-light);
+      color: var(--color-text);
+    }
+
+    .radio-item input[type="radio"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--color-border-light);
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .radio-item input[type="radio"]:checked {
+      border-color: var(--color-primary);
+    }
+
+    .radio-item input[type="radio"]:checked::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .radio-item:has(input[type="radio"]:checked) {
+      border-color: var(--color-primary);
+      background: var(--color-primary-glow);
+      color: var(--color-primary);
+    }
+
+    /* Agent cards */
+    .agent-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .agent-card {
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-elevated);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .agent-card:hover {
+      border-color: var(--color-border-light);
+    }
+
+    .agent-card.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft);
+      box-shadow: 0 0 0 1px var(--color-primary), var(--shadow-glow);
+    }
+
+    .agent-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+    }
+
+    .agent-card-name {
+      font-weight: 600;
+      font-size: var(--font-sm);
+      color: var(--color-text);
+    }
+
+    .agent-card-meta {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    .agent-card-desc {
+      font-size: var(--font-xs);
+      color: var(--color-text-sub);
+      line-height: 1.5;
+    }
+
+    /* Preset buttons */
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+
+    .preset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-elevated);
+      color: var(--color-text-sub);
+      font-size: var(--font-xs);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .preset-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-glow);
+    }
+
+    .preset-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Generate button */
+    .generate-btn {
+      width: 100%;
+      height: 44px;
+      margin-top: var(--space-4);
+    }
+
+    /* Result area */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .result-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+    }
+
+    .result-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-text-muted);
+    }
+
+    .result-status.ready .result-status-dot {
+      background: var(--color-success);
+    }
+
+    .result-status.generating .result-status-dot {
+      background: var(--color-primary);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .result-content {
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      flex: 1;
+      overflow-y: auto;
+      min-height: 300px;
+    }
+
+    .result-content h1,
+    .result-content h2,
+    .result-content h3,
+    .result-content h4 {
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+      margin-top: var(--space-4);
+      font-weight: 600;
+    }
+
+    .result-content h1:first-child,
+    .result-content h2:first-child,
+    .result-content h3:first-child,
+    .result-content h4:first-child {
+      margin-top: 0;
+    }
+
+    .result-content h2 { font-size: var(--font-lg); }
+    .result-content h3 { font-size: var(--font-md); }
+
+    .result-content p {
+      color: var(--color-text-sub);
+      line-height: 1.7;
+      margin-bottom: var(--space-3);
+    }
+
+    .result-content ul,
+    .result-content ol {
+      margin-bottom: var(--space-3);
+      padding-left: var(--space-5);
+    }
+
+    .result-content li {
+      color: var(--color-text-sub);
+      line-height: 1.7;
+      margin-bottom: var(--space-2);
+    }
+
+    .result-content strong {
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    /* Loading state */
+    .result-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      gap: var(--space-4);
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+    }
+
+    .empty-result {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 200px;
+      gap: var(--space-3);
+      color: var(--color-text-muted);
+    }
+
+    .empty-result svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.5;
+    }
+
+    .empty-result-title {
+      font-size: var(--font-md);
+      font-weight: 500;
+      color: var(--color-text-sub);
+    }
+
+    .empty-result-desc {
+      font-size: var(--font-sm);
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    /* Result actions */
+    .result-actions {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+
+    .result-actions .btn {
+      flex: 1;
+    }
+
+    .result-actions .btn-primary {
+      flex: 1.5;
+    }
+
+    /* Version source tag in modal */
+    .version-source-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--color-primary-glow);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      border-radius: var(--radius-md);
+      font-size: var(--font-sm);
+      color: var(--color-primary);
+    }
+
+    .version-source-tag svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Section divider */
+    .config-section {
+      margin-bottom: var(--space-5);
+    }
+
+    .config-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .config-section-title {
+      font-size: var(--font-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .config-section-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--color-primary);
+    }
+
+    @media (max-width: 1024px) {
+      .ai-assist-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body data-page="ai-assist">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">RA</div>
+      <div>
+        <div class="brand-name">Resume AI</div>
+        <div class="brand-sub">智能简历管理</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">主菜单</div>
+      <a class="nav-item" data-nav="dashboard" href="index.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>仪表盘</span>
+      </a>
+      <a class="nav-item" data-nav="editor" href="editor.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="9" x2="11" y2="9"/></svg>
+        <span>简历编辑</span>
+      </a>
+      <a class="nav-item" data-nav="agents" href="agents.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        <span>AI Agents</span>
+      </a>
+      <a class="nav-item" data-nav="ai-assist" href="ai-assist.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <span>智能补齐</span>
+      </a>
+      <div class="nav-section-label">管理</div>
+      <a class="nav-item" data-nav="versions" href="versions.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+        <span>版本管理</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">龚</div>
+        <div class="user-info">
+          <div class="user-name">龚芝雄</div>
+          <div class="user-role">高级工程师</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="app-main">
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="page-title">智能补齐</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-ghost btn-icon" title="通知">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="设置">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content page-animate">
+      <div class="ai-assist-layout">
+        <!-- Left: Config Panel -->
+        <div class="config-panel">
+          <div class="card">
+            <div class="card-body">
+              <!-- Section 1: Target Selection -->
+              <div class="config-section">
+                <div class="config-section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  选择优化目标
+                </div>
+                <div class="form-group">
+                  <label class="form-label">目标类型</label>
+                  <div class="radio-group" id="target-type-group">
+                    <label class="radio-item">
+                      <input type="radio" name="targetType" value="project" checked>
+                      <span>项目经历</span>
+                    </label>
+                    <label class="radio-item">
+                      <input type="radio" name="targetType" value="experience">
+                      <span>工作经历</span>
+                    </label>
+                    <label class="radio-item">
+                      <input type="radio" name="targetType" value="summary">
+                      <span>个人简介</span>
+                    </label>
+                    <label class="radio-item">
+                      <input type="radio" name="targetType" value="skill">
+                      <span>技能描述</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group" id="target-select-group">
+                  <label class="form-label">目标选择</label>
+                  <select class="form-select" id="target-select">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+              </div>
+
+              <!-- Section 2: Agent Selection -->
+              <div class="config-section">
+                <div class="config-section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                  选择 Agent
+                </div>
+                <div class="agent-cards" id="agent-cards">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- Section 3: Instructions -->
+              <div class="config-section">
+                <div class="config-section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 18h3a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1L8 6a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h2"/><path d="M11 18v1"/><path d="M11 6V5"/></svg>
+                  优化指令
+                </div>
+                <div class="preset-buttons">
+                  <button class="preset-btn" data-preset="optimize">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    优化描述
+                  </button>
+                  <button class="preset-btn" data-preset="star">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    STAR法则
+                  </button>
+                  <button class="preset-btn" data-preset="tech">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    技术增强
+                  </button>
+                  <button class="preset-btn" data-preset="translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                    翻译成英文
+                  </button>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">自定义指令</label>
+                  <textarea class="form-textarea" id="custom-instruction" rows="4" placeholder="请输入自定义优化指令，例如：突出量化数据、强调团队协作能力..."></textarea>
+                </div>
+              </div>
+
+              <!-- Generate Button -->
+              <button class="btn btn-primary btn-lg generate-btn" id="generate-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                开始生成
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Result Panel -->
+        <div class="result-panel">
+          <div class="card">
+            <div class="card-body" style="display: flex; flex-direction: column; height: 100%;">
+              <div class="result-header">
+                <div class="result-status ready" id="result-status">
+                  <span class="result-status-dot"></span>
+                  <span id="result-status-text">等待生成</span>
+                </div>
+                <div class="text-xs text-muted" id="result-meta"></div>
+              </div>
+
+              <div class="result-content" id="result-content">
+                <div class="empty-result">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  <div class="empty-result-title">AI 智能优化</div>
+                  <div class="empty-result-desc">选择优化目标和 Agent，输入优化指令，点击"开始生成"即可获得 AI 优化后的内容</div>
+                </div>
+              </div>
+
+              <div class="result-actions" id="result-actions" style="display: none;">
+                <button class="btn btn-secondary" id="regenerate-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                  重新生成
+                </button>
+                <button class="btn btn-secondary" id="copy-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  复制结果
+                </button>
+                <button class="btn btn-primary" id="save-version-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+                  保存为新版本
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Version Modal -->
+  <div class="modal-overlay" id="save-version-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+          保存为新版本
+        </h3>
+        <button class="modal-close" onclick="closeModal('save-version-modal')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">版本变更说明</label>
+          <textarea class="form-textarea" id="version-change-summary" rows="4" placeholder="请描述本次版本的主要变更内容..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">版本来源</label>
+          <div class="version-source-tag" id="version-source-tag">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+            <span id="version-source-agent-name">简历优化专家</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('save-version-modal')">取消</button>
+        <button class="btn btn-primary" id="confirm-create-version-btn">
+          创建版本
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    // AI Assist Page Logic
+    let selectedAgentId = null;
+    let currentResult = '';
+    let isGenerating = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initTargetType();
+      initAgentCards();
+      initPresetButtons();
+      initGenerateButton();
+      initResultActions();
+      initSaveVersionModal();
+
+      // Check URL params for pre-selected agent
+      const urlParams = new URLSearchParams(window.location.search);
+      const agentParam = urlParams.get('agent');
+      if (agentParam) {
+        selectAgent(agentParam);
+      }
+      const targetParam = urlParams.get('target');
+      if (targetParam) {
+        const radio = document.querySelector(`input[name="targetType"][value="${targetParam}"]`);
+        if (radio) {
+          radio.checked = true;
+          updateTargetSelect();
+        }
+      }
+    });
+
+    // ===== Target Type =====
+    function initTargetType() {
+      const radioGroup = document.getElementById('target-type-group');
+      radioGroup.addEventListener('change', function(e) {
+        if (e.target.name === 'targetType') {
+          updateTargetSelect();
+        }
+      });
+      updateTargetSelect();
+    }
+
+    function updateTargetSelect() {
+      const type = document.querySelector('input[name="targetType"]:checked').value;
+      const select = document.getElementById('target-select');
+      const selectGroup = document.getElementById('target-select-group');
+
+      if (type === 'summary') {
+        selectGroup.style.display = 'none';
+        return;
+      }
+      selectGroup.style.display = 'block';
+
+      let options = [];
+      if (type === 'project') {
+        options = window.DB.resume.projects.map(p => ({ id: p.id, name: p.name }));
+      } else if (type === 'experience') {
+        options = window.DB.resume.experiences.map(e => ({ id: e.id, name: e.company }));
+      } else if (type === 'skill') {
+        options = window.DB.resume.skills.map((s, i) => ({ id: 'skill-' + i, name: s.category }));
+      }
+
+      select.innerHTML = options.map(opt =>
+        `<option value="${opt.id}">${opt.name}</option>`
+      ).join('');
+    }
+
+    // ===== Agent Cards =====
+    function initAgentCards() {
+      const container = document.getElementById('agent-cards');
+      const activeAgents = window.DB.agents.filter(a => a.status === 'active');
+
+      const providerNameMap = {
+        openai: 'OpenAI',
+        anthropic: 'Anthropic',
+        google: 'Google',
+        local: '本地模型',
+        custom: '自定义'
+      };
+
+      container.innerHTML = activeAgents.map((agent, idx) => {
+        const providerName = providerNameMap[agent.provider] || agent.provider;
+        const isSelected = idx === 0;
+        if (isSelected) selectedAgentId = agent.id;
+        return `
+          <div class="agent-card ${isSelected ? 'selected' : ''}" data-agent-id="${agent.id}">
+            <div class="agent-card-header">
+              <span class="agent-card-name">${agent.name}</span>
+              <span class="tag tag-success"><span class="tag-dot"></span>活跃</span>
+            </div>
+            <div class="agent-card-meta">${providerName} · ${agent.model}</div>
+            <div class="agent-card-desc">${agent.description.substring(0, 60)}...</div>
+          </div>
+        `;
+      }).join('');
+
+      container.addEventListener('click', function(e) {
+        const card = e.target.closest('.agent-card');
+        if (card) {
+          const agentId = card.dataset.agentId;
+          selectAgent(agentId);
+        }
+      });
+    }
+
+    function selectAgent(agentId) {
+      selectedAgentId = agentId;
+      document.querySelectorAll('.agent-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.agentId === agentId);
+      });
+    }
+
+    // ===== Preset Buttons =====
+    function initPresetButtons() {
+      const presetBtns = document.querySelectorAll('.preset-btn');
+      const textarea = document.getElementById('custom-instruction');
+
+      const presetTexts = {
+        optimize: '优化这个项目/经历的描述，让它更专业、更有说服力，增加量化指标和业务价值描述',
+        star: '按照STAR法则（情境-任务-行动-结果）重新组织这段描述，突出行动细节和量化结果',
+        tech: '增强技术描述深度，突出技术架构、技术难点和解决方案，使用专业技术术语',
+        translate: '将这段简历内容翻译成英文，确保技术术语准确，表达地道，符合英文简历规范'
+      };
+
+      presetBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const preset = this.dataset.preset;
+          textarea.value = presetTexts[preset] || '';
+          textarea.focus();
+        });
+      });
+    }
+
+    // ===== Generate =====
+    function initGenerateButton() {
+      const btn = document.getElementById('generate-btn');
+      btn.addEventListener('click', handleGenerate);
+    }
+
+    async function handleGenerate() {
+      if (isGenerating) return;
+
+      const targetType = document.querySelector('input[name="targetType"]:checked').value;
+      const targetSelect = document.getElementById('target-select');
+      const targetId = targetSelect ? targetSelect.value : 'summary';
+      const instruction = document.getElementById('custom-instruction').value;
+
+      if (!selectedAgentId) {
+        window.API.showToast('请先选择一个 Agent', 'warning');
+        return;
+      }
+
+      if (!instruction.trim()) {
+        window.API.showToast('请输入优化指令或选择预设指令', 'warning');
+        return;
+      }
+
+      isGenerating = true;
+      const generateBtn = document.getElementById('generate-btn');
+      generateBtn.classList.add('btn-loading');
+      generateBtn.disabled = true;
+
+      // Update status
+      const statusEl = document.getElementById('result-status');
+      const statusText = document.getElementById('result-status-text');
+      statusEl.className = 'result-status generating';
+      statusText.textContent = 'AI 正在生成...';
+
+      // Show loading in result area
+      const resultContent = document.getElementById('result-content');
+      resultContent.innerHTML = `
+        <div class="result-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">AI 正在生成优化内容，请稍候...</div>
+        </div>
+      `;
+
+      // Hide result actions
+      document.getElementById('result-actions').style.display = 'none';
+
+      try {
+        const result = await window.API.generateWithAI({
+          agentId: selectedAgentId,
+          targetType,
+          targetId,
+          instruction
+        });
+
+        if (result.code === 0) {
+          currentResult = result.data.result;
+          renderResult(result.data.result);
+
+          statusEl.className = 'result-status ready';
+          statusText.textContent = '生成完成';
+
+          document.getElementById('result-meta').textContent =
+            `消耗 ${result.data.tokensUsed.toLocaleString()} tokens`;
+
+          document.getElementById('result-actions').style.display = 'flex';
+        } else {
+          window.API.showToast(result.message || '生成失败', 'error');
+          statusEl.className = 'result-status';
+          statusText.textContent = '生成失败';
+        }
+      } catch (err) {
+        window.API.showToast('生成出错，请重试', 'error');
+        statusEl.className = 'result-status';
+        statusText.textContent = '生成失败';
+      } finally {
+        isGenerating = false;
+        generateBtn.classList.remove('btn-loading');
+        generateBtn.disabled = false;
+      }
+    }
+
+    function renderResult(markdown) {
+      const resultContent = document.getElementById('result-content');
+      // Simple markdown-like rendering
+      let html = markdown
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      resultContent.innerHTML = '<p>' + html + '</p>';
+    }
+
+    // ===== Result Actions =====
+    function initResultActions() {
+      // Regenerate
+      document.getElementById('regenerate-btn').addEventListener('click', handleGenerate);
+
+      // Copy
+      document.getElementById('copy-btn').addEventListener('click', function() {
+        navigator.clipboard.writeText(currentResult).then(() => {
+          window.API.showToast('已复制到剪贴板', 'success');
+        }).catch(() => {
+          // Fallback
+          const textarea = document.createElement('textarea');
+          textarea.value = currentResult;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          window.API.showToast('已复制到剪贴板', 'success');
+        });
+      });
+
+      // Save version
+      document.getElementById('save-version-btn').addEventListener('click', function() {
+        openModal('save-version-modal');
+      });
+    }
+
+    // ===== Save Version Modal =====
+    function initSaveVersionModal() {
+      const confirmBtn = document.getElementById('confirm-create-version-btn');
+      confirmBtn.addEventListener('click', handleCreateVersion);
+
+      // Set default change summary when modal opens
+      const saveBtn = document.getElementById('save-version-btn');
+      saveBtn.addEventListener('click', function() {
+        const agent = window.DB.agents.find(a => a.id === selectedAgentId);
+        const targetType = document.querySelector('input[name="targetType"]:checked').value;
+        const typeName = {
+          project: '项目经历',
+          experience: '工作经历',
+          summary: '个人简介',
+          skill: '技能描述'
+        }[targetType];
+
+        document.getElementById('version-change-summary').value =
+          `AI优化：${agent ? agent.name : ''}优化${typeName}内容`;
+
+        document.getElementById('version-source-agent-name').textContent =
+          agent ? agent.name : '未知Agent';
+      });
+    }
+
+    async function handleCreateVersion() {
+      const changeSummary = document.getElementById('version-change-summary').value.trim();
+      if (!changeSummary) {
+        window.API.showToast('请填写版本变更说明', 'warning');
+        return;
+      }
+
+      const agent = window.DB.agents.find(a => a.id === selectedAgentId);
+      const confirmBtn = document.getElementById('confirm-create-version-btn');
+      confirmBtn.classList.add('btn-loading');
+      confirmBtn.disabled = true;
+
+      try {
+        const result = await window.API.createVersion({
+          resumeSnapshot: window.DB.resume,
+          changeSummary,
+          source: 'ai-generated',
+          agentId: selectedAgentId,
+          agentName: agent ? agent.name : null
+        });
+
+        if (result.code === 0) {
+          window.API.showToast('版本创建成功，可前往版本管理查看', 'success');
+          closeModal('save-version-modal');
+        } else {
+          window.API.showToast(result.message || '创建失败', 'error');
+        }
+      } catch (err) {
+        window.API.showToast('创建失败，请重试', 'error');
+      } finally {
+        confirmBtn.classList.remove('btn-loading');
+        confirmBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

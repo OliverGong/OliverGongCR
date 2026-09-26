@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简历编辑 - Resume AI Manager</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Editor page specific styles */
+    .section-card {
+      margin-bottom: var(--space-4);
+    }
+
+    .section-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      cursor: pointer;
+      user-select: none;
+      transition: background var(--transition-fast);
+    }
+
+    .section-header:hover {
+      background: var(--color-surface-hover);
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .section-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-primary);
+    }
+
+    .section-title {
+      font-size: var(--font-md);
+      font-weight: 600;
+      font-family: var(--font-display);
+    }
+
+    .section-subtitle {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .section-header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .section-chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--color-text-muted);
+      transition: transform var(--transition-fast);
+    }
+
+    .section-card.collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      padding: var(--space-5);
+      border-top: 1px solid var(--color-border);
+      display: block;
+    }
+
+    .section-card.collapsed .section-body {
+      display: none;
+    }
+
+    .section-edit-area {
+      display: none;
+      padding-top: var(--space-4);
+      margin-top: var(--space-4);
+      border-top: 1px dashed var(--color-border);
+    }
+
+    .section-card.editing .section-edit-area {
+      display: block;
+    }
+
+    .section-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+
+    /* Basic info display */
+    .info-display-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .info-item.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .info-label {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .info-value {
+      font-size: var(--font-sm);
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .info-value.summary {
+      color: var(--color-text-sub);
+    }
+
+    .info-name {
+      font-size: var(--font-2xl);
+      font-weight: 700;
+      font-family: var(--font-display);
+      color: var(--color-text);
+    }
+
+    .info-title-text {
+      font-size: var(--font-md);
+      color: var(--color-primary);
+      font-weight: 500;
+    }
+
+    .basic-info-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .basic-info-person {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .basic-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--color-primary-dim), var(--color-info));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-2xl);
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    /* Experience card */
+    .exp-card {
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+      overflow: hidden;
+      transition: border-color var(--transition-fast);
+    }
+
+    .exp-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .exp-card:hover {
+      border-color: var(--color-border-light);
+    }
+
+    .exp-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .exp-card-header:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .exp-card-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .exp-company {
+      font-size: var(--font-base);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-1);
+    }
+
+    .exp-position {
+      font-size: var(--font-sm);
+      color: var(--color-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .exp-period {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .exp-period svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .exp-card-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-shrink: 0;
+      margin-left: var(--space-3);
+    }
+
+    .exp-card-body {
+      display: none;
+      padding: 0 var(--space-4) var(--space-4);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-3);
+      margin-top: 0;
+    }
+
+    .exp-card.expanded .exp-card-body {
+      display: block;
+    }
+
+    .exp-card.expanded .exp-chevron {
+      transform: rotate(180deg);
+    }
+
+    .exp-chevron {
+      width: 16px;
+      height: 16px;
+      color: var(--color-text-muted);
+      transition: transform var(--transition-fast);
+    }
+
+    .highlights-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .highlights-list li {
+      position: relative;
+      padding-left: var(--space-4);
+      margin-bottom: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.6;
+    }
+
+    .highlights-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .highlights-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Project card */
+    .project-card {
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+      overflow: hidden;
+      transition: border-color var(--transition-fast);
+    }
+
+    .project-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .project-card:hover {
+      border-color: rgba(34, 211, 238, 0.3);
+    }
+
+    .project-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .project-card-header:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .project-card-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .project-name {
+      font-size: var(--font-base);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-1);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .project-role {
+      font-size: var(--font-sm);
+      color: var(--color-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .project-category {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .project-category svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .project-card-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-shrink: 0;
+      margin-left: var(--space-3);
+    }
+
+    .btn-ai {
+      height: 28px;
+      padding: 0 var(--space-3);
+      font-size: var(--font-xs);
+      background: var(--color-primary-glow);
+      color: var(--color-primary);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-weight: 500;
+    }
+
+    .btn-ai:hover {
+      background: rgba(34, 211, 238, 0.2);
+      border-color: var(--color-primary);
+    }
+
+    .btn-ai svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .project-card-body {
+      display: none;
+      padding: 0 var(--space-4) var(--space-4);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-3);
+    }
+
+    .project-card.expanded .project-card-body {
+      display: block;
+    }
+
+    .project-card.expanded .exp-chevron {
+      transform: rotate(180deg);
+    }
+
+    .project-section-title {
+      font-size: var(--font-xs);
+      font-weight: 600;
+      color: var(--color-text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-2);
+      margin-top: var(--space-3);
+    }
+
+    .project-section-title:first-child {
+      margin-top: 0;
+    }
+
+    .project-background {
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.6;
+    }
+
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .tech-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-xs);
+      font-weight: 500;
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--color-info);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+    }
+
+    .achievements-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .achievements-list li {
+      position: relative;
+      padding-left: var(--space-4);
+      margin-bottom: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.6;
+    }
+
+    .achievements-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-success);
+    }
+
+    .achievements-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .project-outcome {
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      background: var(--color-primary-soft);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      border-radius: var(--radius-md);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.6;
+    }
+
+    .project-outcome strong {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* Skills section */
+    .skill-category {
+      margin-bottom: var(--space-5);
+    }
+
+    .skill-category:last-child {
+      margin-bottom: 0;
+    }
+
+    .skill-category-title {
+      font-size: var(--font-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .skill-category-title::before {
+      content: "";
+      width: 3px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--color-primary);
+    }
+
+    .skill-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .skill-tag {
+      padding: 4px 12px;
+      border-radius: var(--radius-md);
+      font-size: var(--font-xs);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-sub);
+      transition: all var(--transition-fast);
+    }
+
+    .skill-tag:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    /* Education card */
+    .edu-card {
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+    }
+
+    .edu-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .edu-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+    }
+
+    .edu-school {
+      font-size: var(--font-base);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .edu-degree {
+      font-size: var(--font-sm);
+      color: var(--color-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .edu-period {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+    }
+
+    .edu-details {
+      margin-top: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .edu-details-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .edu-details-list li {
+      position: relative;
+      padding-left: var(--space-4);
+      margin-bottom: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.5;
+    }
+
+    .edu-details-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-info);
+    }
+
+    .edu-details-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Certifications */
+    .cert-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .cert-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast);
+    }
+
+    .cert-item:hover {
+      border-color: var(--color-border-light);
+    }
+
+    .cert-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .cert-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: rgba(251, 191, 36, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cert-icon svg {
+      width: 16px;
+      height: 16px;
+      color: var(--color-warning);
+    }
+
+    .cert-name {
+      font-size: var(--font-sm);
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .cert-issuer {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .cert-date {
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Other section lists */
+    .other-section {
+      margin-bottom: var(--space-5);
+    }
+
+    .other-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .other-section-title {
+      font-size: var(--font-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .other-section-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--color-primary);
+    }
+
+    .other-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .other-list li {
+      position: relative;
+      padding-left: var(--space-4);
+      margin-bottom: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.6;
+    }
+
+    .other-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-border-light);
+    }
+
+    .other-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .honors-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .honor-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      border-radius: var(--radius-md);
+      font-size: var(--font-sm);
+      color: var(--color-warning);
+    }
+
+    .honor-tag svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Highlight textarea for edit */
+    .highlights-edit-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .highlight-edit-item {
+      display: flex;
+      gap: var(--space-2);
+      align-items: flex-start;
+    }
+
+    .highlight-edit-item .form-textarea {
+      flex: 1;
+      min-height: 60px;
+    }
+
+    .highlight-edit-item .btn-remove {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+
+    .highlight-edit-item .btn-remove:hover {
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+    }
+
+    .btn-add-item {
+      width: 100%;
+      padding: var(--space-2);
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: var(--font-xs);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      transition: all var(--transition-fast);
+      margin-top: var(--space-2);
+    }
+
+    .btn-add-item:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-add-item svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .sub-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .sub-section-title {
+      font-size: var(--font-base);
+      font-weight: 600;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .sub-section-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-primary);
+    }
+
+    @media (max-width: 768px) {
+      .info-display-grid {
+        grid-template-columns: 1fr;
+      }
+      .basic-info-header {
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+    }
+  </style>
+</head>
+<body data-page="editor">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">RA</div>
+      <div>
+        <div class="brand-name">Resume AI</div>
+        <div class="brand-sub">智能简历管理</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">主菜单</div>
+      <a class="nav-item" data-nav="dashboard" href="index.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>仪表盘</span>
+      </a>
+      <a class="nav-item" data-nav="editor" href="editor.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="9" x2="11" y2="9"/></svg>
+        <span>简历编辑</span>
+      </a>
+      <a class="nav-item" data-nav="agents" href="agents.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        <span>AI Agents</span>
+      </a>
+      <a class="nav-item" data-nav="ai-assist" href="ai-assist.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <span>智能补齐</span>
+      </a>
+      <div class="nav-section-label">管理</div>
+      <a class="nav-item" data-nav="versions" href="versions.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+        <span>版本管理</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">龚</div>
+        <div class="user-info">
+          <div class="user-name">龚芝雄</div>
+          <div class="user-role">高级工程师</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="app-main">
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="page-title">简历编辑</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-ghost btn-icon" title="通知">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="设置">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="btn btn-primary" id="btn-save-resume">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          保存
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content page-animate">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-item active" data-tab="basic">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          基本信息
+        </button>
+        <button class="tab-item" data-tab="experience">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          工作经历
+        </button>
+        <button class="tab-item" data-tab="projects">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          项目经历
+        </button>
+        <button class="tab-item" data-tab="skills">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          技能与证书
+        </button>
+        <button class="tab-item" data-tab="other">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          其他
+        </button>
+      </div>
+
+      <!-- Tab: Basic Info -->
+      <div class="tab-panel active" id="tab-basic">
+        <div class="card section-card" id="section-basic">
+          <div class="section-header" onclick="toggleSection('basic')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div class="section-title">基本信息</div>
+                <div class="section-subtitle">个人资料与联系方式</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); toggleEdit('basic')" id="btn-edit-basic">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                编辑
+              </button>
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <!-- Display -->
+            <div id="basic-display">
+              <div class="basic-info-header">
+                <div class="basic-info-person">
+                  <div class="basic-avatar" id="basic-avatar">龚</div>
+                  <div>
+                    <div class="info-name" id="display-name">龚芝雄</div>
+                    <div class="info-title-text" id="display-title">高级 Java 开发工程师 / 企业集成架构师</div>
+                  </div>
+                </div>
+              </div>
+              <div class="info-display-grid">
+                <div class="info-item">
+                  <span class="info-label">电话</span>
+                  <span class="info-value" id="display-phone">188-1049-1714</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">邮箱</span>
+                  <span class="info-value" id="display-email">995167235@qq.com</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">所在地</span>
+                  <span class="info-value" id="display-location">北京</span>
+                </div>
+                <div class="info-item full-width">
+                  <span class="info-label">个人简介</span>
+                  <span class="info-value summary" id="display-summary"></span>
+                </div>
+              </div>
+            </div>
+            <!-- Edit Area -->
+            <div class="section-edit-area" id="basic-edit-area">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">姓名</label>
+                  <input type="text" class="form-input" id="edit-name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">职位</label>
+                  <input type="text" class="form-input" id="edit-title">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">电话</label>
+                  <input type="text" class="form-input" id="edit-phone">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">邮箱</label>
+                  <input type="email" class="form-input" id="edit-email">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">所在地</label>
+                <input type="text" class="form-input" id="edit-location">
+              </div>
+              <div class="form-group">
+                <label class="form-label">个人简介</label>
+                <textarea class="form-textarea" id="edit-summary" rows="5"></textarea>
+              </div>
+              <div class="section-edit-actions">
+                <button class="btn btn-secondary btn-sm" onclick="toggleEdit('basic')">取消</button>
+                <button class="btn btn-primary btn-sm" onclick="saveBasicInfo()">保存修改</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Experience -->
+      <div class="tab-panel" id="tab-experience">
+        <div class="card section-card" id="section-experience">
+          <div class="section-header" onclick="toggleSection('experience')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div>
+                <div class="section-title">工作经历</div>
+                <div class="section-subtitle">职业发展历程</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div id="experience-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Projects -->
+      <div class="tab-panel" id="tab-projects">
+        <div class="card section-card" id="section-projects">
+          <div class="section-header" onclick="toggleSection('projects')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div>
+                <div class="section-title">项目经历</div>
+                <div class="section-subtitle">核心项目与技术成果</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div id="projects-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Skills -->
+      <div class="tab-panel" id="tab-skills">
+        <div class="card section-card mb-4" id="section-skills">
+          <div class="section-header" onclick="toggleSection('skills')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </div>
+              <div>
+                <div class="section-title">技能分类</div>
+                <div class="section-subtitle">技术栈与能力标签</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div id="skills-list"></div>
+          </div>
+        </div>
+
+        <div class="card section-card mb-4" id="section-education">
+          <div class="section-header" onclick="toggleSection('education')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <div>
+                <div class="section-title">教育背景</div>
+                <div class="section-subtitle">学历与专业信息</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div id="education-list"></div>
+          </div>
+        </div>
+
+        <div class="card section-card" id="section-certs">
+          <div class="section-header" onclick="toggleSection('certs')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <div class="section-title">证书列表</div>
+                <div class="section-subtitle">专业认证与资质</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div id="certs-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Other -->
+      <div class="tab-panel" id="tab-other">
+        <div class="card section-card mb-4" id="section-testing">
+          <div class="section-header" onclick="toggleSection('testing')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="section-title">测试能力</div>
+                <div class="section-subtitle">功能测试与质量保障</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <ul class="other-list" id="testing-list"></ul>
+          </div>
+        </div>
+
+        <div class="card section-card mb-4" id="section-agile">
+          <div class="section-header" onclick="toggleSection('agile')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div>
+                <div class="section-title">敏捷协作</div>
+                <div class="section-subtitle">开发流程与团队协作</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <ul class="other-list" id="agile-list"></ul>
+          </div>
+        </div>
+
+        <div class="card section-card" id="section-honors">
+          <div class="section-header" onclick="toggleSection('honors')">
+            <div class="section-header-left">
+              <div class="section-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              </div>
+              <div>
+                <div class="section-title">荣誉奖项</div>
+                <div class="section-subtitle">获得的表彰与荣誉</div>
+              </div>
+            </div>
+            <div class="section-header-right">
+              <svg class="section-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="honors-grid" id="honors-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    // ========== Editor Page Logic ==========
+
+    const resume = window.DB.resume;
+
+    // ========== Section Toggle (Collapse/Expand) ==========
+    function toggleSection(sectionId) {
+      const card = document.getElementById('section-' + sectionId);
+      if (card) {
+        card.classList.toggle('collapsed');
+      }
+    }
+
+    // ========== Edit Toggle ==========
+    function toggleEdit(sectionId) {
+      const card = document.getElementById('section-' + sectionId);
+      if (card) {
+        card.classList.toggle('editing');
+        if (card.classList.contains('editing')) {
+          // Load current data into edit form
+          loadEditData(sectionId);
+        }
+      }
+    }
+
+    // ========== Basic Info ==========
+    function renderBasicInfo() {
+      const info = resume.basicInfo;
+      document.getElementById('display-name').textContent = info.name;
+      document.getElementById('display-title').textContent = info.title;
+      document.getElementById('display-phone').textContent = info.phone;
+      document.getElementById('display-email').textContent = info.email;
+      document.getElementById('display-location').textContent = info.location;
+      document.getElementById('display-summary').textContent = info.summary;
+      document.getElementById('basic-avatar').textContent = info.name.charAt(0);
+    }
+
+    function loadEditData(sectionId) {
+      if (sectionId === 'basic') {
+        const info = resume.basicInfo;
+        document.getElementById('edit-name').value = info.name;
+        document.getElementById('edit-title').value = info.title;
+        document.getElementById('edit-phone').value = info.phone;
+        document.getElementById('edit-email').value = info.email;
+        document.getElementById('edit-location').value = info.location;
+        document.getElementById('edit-summary').value = info.summary;
+      }
+    }
+
+    function saveBasicInfo() {
+      resume.basicInfo.name = document.getElementById('edit-name').value;
+      resume.basicInfo.title = document.getElementById('edit-title').value;
+      resume.basicInfo.phone = document.getElementById('edit-phone').value;
+      resume.basicInfo.email = document.getElementById('edit-email').value;
+      resume.basicInfo.location = document.getElementById('edit-location').value;
+      resume.basicInfo.summary = document.getElementById('edit-summary').value;
+      renderBasicInfo();
+      toggleEdit('basic');
+      window.API.showToast('基本信息已更新', 'success');
+    }
+
+    // ========== Experience List ==========
+    function renderExperiences() {
+      const container = document.getElementById('experience-list');
+      container.innerHTML = resume.experiences.map((exp, index) => `
+        <div class="exp-card ${index === 0 ? 'expanded' : ''}" data-exp-id="${exp.id}">
+          <div class="exp-card-header" onclick="toggleExpCard('${exp.id}')">
+            <div class="exp-card-left">
+              <div class="exp-company">${exp.company}</div>
+              <div class="exp-position">${exp.position}</div>
+              <div class="exp-period">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                ${exp.period}
+              </div>
+            </div>
+            <div class="exp-card-right">
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); toggleExpEdit('${exp.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                编辑
+              </button>
+              <svg class="exp-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="exp-card-body">
+            <ul class="highlights-list">
+              ${exp.highlights.map(h => `<li>${h}</li>`).join('')}
+            </ul>
+            <!-- Edit area (hidden by default) -->
+            <div class="section-edit-area" id="exp-edit-${exp.id}">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">公司名称</label>
+                  <input type="text" class="form-input" id="exp-edit-company-${exp.id}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">职位</label>
+                  <input type="text" class="form-input" id="exp-edit-position-${exp.id}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">时间段</label>
+                <input type="text" class="form-input" id="exp-edit-period-${exp.id}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">工作要点</label>
+                <div class="highlights-edit-list" id="exp-highlights-edit-${exp.id}"></div>
+                <button class="btn-add-item" onclick="addHighlightItem('exp', '${exp.id}')">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                  添加要点
+                </button>
+              </div>
+              <div class="section-edit-actions">
+                <button class="btn btn-secondary btn-sm" onclick="toggleExpEdit('${exp.id}')">取消</button>
+                <button class="btn btn-primary btn-sm" onclick="saveExperience('${exp.id}')">保存修改</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleExpCard(expId) {
+      const card = document.querySelector(`.exp-card[data-exp-id="${expId}"]`);
+      if (card) {
+        card.classList.toggle('expanded');
+      }
+    }
+
+    function toggleExpEdit(expId) {
+      const editArea = document.getElementById('exp-edit-' + expId);
+      const exp = resume.experiences.find(e => e.id === expId);
+      if (editArea && exp) {
+        if (editArea.style.display === 'block') {
+          editArea.style.display = 'none';
+        } else {
+          editArea.style.display = 'block';
+          // Load data
+          document.getElementById('exp-edit-company-' + expId).value = exp.company;
+          document.getElementById('exp-edit-position-' + expId).value = exp.position;
+          document.getElementById('exp-edit-period-' + expId).value = exp.period;
+          renderHighlightsEdit('exp', expId, exp.highlights);
+        }
+      }
+    }
+
+    function renderHighlightsEdit(type, id, highlights) {
+      const container = document.getElementById(`${type}-highlights-edit-${id}`);
+      container.innerHTML = highlights.map((h, idx) => `
+        <div class="highlight-edit-item">
+          <textarea class="form-textarea" data-idx="${idx}">${h}</textarea>
+          <button class="btn-remove" onclick="removeHighlightItem('${type}', '${id}', ${idx})" title="删除">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function addHighlightItem(type, id) {
+      const container = document.getElementById(`${type}-highlights-edit-${id}`);
+      const idx = container.children.length;
+      const div = document.createElement('div');
+      div.className = 'highlight-edit-item';
+      div.innerHTML = `
+        <textarea class="form-textarea" data-idx="${idx}"></textarea>
+        <button class="btn-remove" onclick="removeHighlightItem('${type}', '${id}', ${idx})" title="删除">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeHighlightItem(type, id, idx) {
+      const container = document.getElementById(`${type}-highlights-edit-${id}`);
+      const items = container.querySelectorAll('.highlight-edit-item');
+      if (items.length > 1) {
+        items[idx].remove();
+      } else {
+        window.API.showToast('至少保留一条要点', 'warning');
+      }
+    }
+
+    function saveExperience(expId) {
+      const exp = resume.experiences.find(e => e.id === expId);
+      if (!exp) return;
+
+      exp.company = document.getElementById('exp-edit-company-' + expId).value;
+      exp.position = document.getElementById('exp-edit-position-' + expId).value;
+      exp.period = document.getElementById('exp-edit-period-' + expId).value;
+
+      const container = document.getElementById('exp-highlights-edit-' + expId);
+      const textareas = container.querySelectorAll('.form-textarea');
+      exp.highlights = Array.from(textareas).map(ta => ta.value.trim()).filter(v => v);
+
+      renderExperiences();
+      window.API.showToast('工作经历已更新', 'success');
+    }
+
+    // ========== Projects List ==========
+    function renderProjects() {
+      const container = document.getElementById('projects-list');
+      container.innerHTML = resume.projects.map((proj, index) => `
+        <div class="project-card ${index === 0 ? 'expanded' : ''}" data-proj-id="${proj.id}">
+          <div class="project-card-header" onclick="toggleProjCard('${proj.id}')">
+            <div class="project-card-left">
+              <div class="project-name">${proj.name}</div>
+              <div class="project-role">${proj.role}</div>
+              <div class="project-category">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" x2="7.01" y1="7" y2="7"/></svg>
+                ${proj.category}
+              </div>
+            </div>
+            <div class="project-card-right">
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); toggleProjEdit('${proj.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                编辑
+              </button>
+              <button class="btn-ai" onclick="event.stopPropagation(); goToAIAssist('${proj.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                AI优化
+              </button>
+              <svg class="exp-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="project-card-body">
+            <div class="project-section-title">项目背景</div>
+            <div class="project-background">${proj.background}</div>
+
+            <div class="project-section-title">技术栈</div>
+            <div class="tech-stack">
+              ${proj.techStack.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+            </div>
+
+            <div class="project-section-title">主要成果</div>
+            <ul class="achievements-list">
+              ${proj.achievements.map(a => `<li>${a}</li>`).join('')}
+            </ul>
+
+            <div class="project-outcome">
+              <strong>项目成效：</strong>${proj.outcome}
+            </div>
+
+            <!-- Edit area (hidden by default) -->
+            <div class="section-edit-area" id="proj-edit-${proj.id}">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">项目名称</label>
+                  <input type="text" class="form-input" id="proj-edit-name-${proj.id}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">角色</label>
+                  <input type="text" class="form-input" id="proj-edit-role-${proj.id}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">项目分类</label>
+                <input type="text" class="form-input" id="proj-edit-category-${proj.id}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">项目背景</label>
+                <textarea class="form-textarea" id="proj-edit-background-${proj.id}" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">技术栈（用逗号分隔）</label>
+                <input type="text" class="form-input" id="proj-edit-techstack-${proj.id}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">主要成果</label>
+                <div class="highlights-edit-list" id="proj-achv-highlights-edit-${proj.id}"></div>
+                <button class="btn-add-item" onclick="addHighlightItem('proj-achv', '${proj.id}')">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                  添加成果
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">项目成效</label>
+                <textarea class="form-textarea" id="proj-edit-outcome-${proj.id}" rows="2"></textarea>
+              </div>
+              <div class="section-edit-actions">
+                <button class="btn btn-secondary btn-sm" onclick="toggleProjEdit('${proj.id}')">取消</button>
+                <button class="btn btn-primary btn-sm" onclick="saveProject('${proj.id}')">保存修改</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleProjCard(projId) {
+      const card = document.querySelector(`.project-card[data-proj-id="${projId}"]`);
+      if (card) {
+        card.classList.toggle('expanded');
+      }
+    }
+
+    function goToAIAssist(projId) {
+      window.location.href = `ai-assist.html?target=project&targetId=${projId}`;
+    }
+
+    function toggleProjEdit(projId) {
+      const editArea = document.getElementById('proj-edit-' + projId);
+      const proj = resume.projects.find(p => p.id === projId);
+      if (editArea && proj) {
+        if (editArea.style.display === 'block') {
+          editArea.style.display = 'none';
+        } else {
+          editArea.style.display = 'block';
+          // Load data
+          document.getElementById('proj-edit-name-' + projId).value = proj.name;
+          document.getElementById('proj-edit-role-' + projId).value = proj.role;
+          document.getElementById('proj-edit-category-' + projId).value = proj.category;
+          document.getElementById('proj-edit-background-' + projId).value = proj.background;
+          document.getElementById('proj-edit-techstack-' + projId).value = proj.techStack.join(', ');
+          document.getElementById('proj-edit-outcome-' + projId).value = proj.outcome;
+          renderHighlightsEdit('proj-achv', projId, proj.achievements);
+        }
+      }
+    }
+
+    function saveProject(projId) {
+      const proj = resume.projects.find(p => p.id === projId);
+      if (!proj) return;
+
+      proj.name = document.getElementById('proj-edit-name-' + projId).value;
+      proj.role = document.getElementById('proj-edit-role-' + projId).value;
+      proj.category = document.getElementById('proj-edit-category-' + projId).value;
+      proj.background = document.getElementById('proj-edit-background-' + projId).value;
+      proj.outcome = document.getElementById('proj-edit-outcome-' + projId).value;
+
+      const techStackVal = document.getElementById('proj-edit-techstack-' + projId).value;
+      proj.techStack = techStackVal.split(',').map(s => s.trim()).filter(v => v);
+
+      const container = document.getElementById('proj-achv-highlights-edit-' + projId);
+      const textareas = container.querySelectorAll('.form-textarea');
+      proj.achievements = Array.from(textareas).map(ta => ta.value.trim()).filter(v => v);
+
+      renderProjects();
+      window.API.showToast('项目经历已更新', 'success');
+    }
+
+    // ========== Skills List ==========
+    function renderSkills() {
+      const container = document.getElementById('skills-list');
+      container.innerHTML = resume.skills.map(skill => `
+        <div class="skill-category">
+          <div class="skill-category-title">${skill.category}</div>
+          <div class="skill-items">
+            ${skill.items.map(item => `<span class="skill-tag">${item}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== Education List ==========
+    function renderEducation() {
+      const container = document.getElementById('education-list');
+      container.innerHTML = resume.education.map(edu => `
+        <div class="edu-card">
+          <div class="edu-header">
+            <div>
+              <div class="edu-school">${edu.school}</div>
+              <div class="edu-degree">${edu.degree}</div>
+            </div>
+            <div class="edu-period">${edu.period}</div>
+          </div>
+          <div class="edu-details">
+            <ul class="edu-details-list">
+              ${edu.details.map(d => `<li>${d}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== Certifications List ==========
+    function renderCerts() {
+      const container = document.getElementById('certs-list');
+      container.innerHTML = `
+        <div class="cert-list">
+          ${resume.certifications.map(cert => `
+            <div class="cert-item">
+              <div class="cert-left">
+                <div class="cert-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                  <div class="cert-name">${cert.name}</div>
+                  <div class="cert-issuer">${cert.issuer}</div>
+                </div>
+              </div>
+              <div class="cert-date">${cert.date}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ========== Other Sections ==========
+    function renderOther() {
+      // Testing
+      document.getElementById('testing-list').innerHTML = resume.other.testing.map(t => `<li>${t}</li>`).join('');
+
+      // Agile
+      document.getElementById('agile-list').innerHTML = resume.other.agile.map(a => `<li>${a}</li>`).join('');
+
+      // Honors
+      document.getElementById('honors-grid').innerHTML = resume.other.honors.map(h => `
+        <span class="honor-tag">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          ${h}
+        </span>
+      `).join('');
+    }
+
+    // ========== Save Resume ==========
+    document.getElementById('btn-save-resume').addEventListener('click', async function() {
+      const result = await window.API.updateResume(resume);
+      if (result.code === 0) {
+        window.API.showToast('简历保存成功', 'success', '保存成功');
+      } else {
+        window.API.showToast(result.message || '保存失败', 'error');
+      }
+    });
+
+    // ========== Initialize ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderBasicInfo();
+      renderExperiences();
+      renderProjects();
+      renderSkills();
+      renderEducation();
+      renderCerts();
+      renderOther();
+    });
+  </script>
+</body>
+</html>

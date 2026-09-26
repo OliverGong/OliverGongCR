@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agents - Resume AI Manager</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ========== Page-specific styles ========== */
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .filter-bar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+      max-width: 360px;
+    }
+
+    .search-input-wrapper svg {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
+
+    .search-input-wrapper .form-input {
+      padding-left: 36px;
+    }
+
+    .filter-select {
+      min-width: 140px;
+    }
+
+    /* Agent Cards Grid */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+
+    .agent-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      transition: all var(--transition-base);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .agent-card:hover {
+      border-color: rgba(34, 211, 238, 0.4);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .agent-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+
+    .agent-name {
+      font-size: var(--font-md);
+      font-weight: 600;
+      color: var(--color-text);
+      font-family: var(--font-display);
+    }
+
+    .agent-description {
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      line-height: 1.5;
+      margin-bottom: var(--space-4);
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .agent-provider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+    }
+
+    .agent-provider-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--color-primary);
+    }
+
+    .agent-token-section {
+      margin-bottom: var(--space-4);
+    }
+
+    .agent-token-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--font-xs);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    .agent-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .agent-actions-left {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-hover);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .toggle.active {
+      background: var(--color-primary);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      transition: transform var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toggle.active .toggle-knob {
+      transform: translateX(18px);
+    }
+
+    /* Modal form specific */
+    .modal-lg {
+      max-width: 640px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast);
+    }
+
+    .password-toggle:hover {
+      color: var(--color-text-sub);
+    }
+
+    .password-toggle svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .temperature-control {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .temperature-control input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: var(--color-bg-elevated);
+      border-radius: var(--radius-full);
+      outline: none;
+      border: 1px solid var(--color-border);
+    }
+
+    .temperature-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+    }
+
+    .temperature-control input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+    }
+
+    .temperature-value {
+      min-width: 36px;
+      text-align: center;
+      font-size: var(--font-sm);
+      color: var(--color-primary);
+      font-weight: 500;
+      font-family: var(--font-mono);
+    }
+
+    /* Delete Confirmation Modal */
+    .confirm-modal {
+      max-width: 420px;
+    }
+
+    .confirm-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      background: rgba(248, 113, 113, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+    }
+
+    .confirm-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--color-danger);
+    }
+
+    .confirm-title {
+      text-align: center;
+      font-size: var(--font-lg);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+    }
+
+    .confirm-message {
+      text-align: center;
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Empty state for agent grid */
+    .agent-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: var(--space-12) var(--space-6);
+      color: var(--color-text-muted);
+    }
+
+    .agent-empty svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+
+    .agent-empty-title {
+      font-size: var(--font-md);
+      font-weight: 500;
+      color: var(--color-text-sub);
+      margin-bottom: var(--space-2);
+    }
+
+    .agent-empty-desc {
+      font-size: var(--font-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+    }
+
+    @media (max-width: 1024px) {
+      .agent-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .agent-grid {
+        grid-template-columns: 1fr;
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-bar-left {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-input-wrapper {
+        max-width: 100%;
+      }
+      .filter-select {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body data-page="agents">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">RA</div>
+      <div>
+        <div class="brand-name">Resume AI</div>
+        <div class="brand-sub">智能简历管理</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">主菜单</div>
+      <a class="nav-item" data-nav="dashboard" href="index.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>仪表盘</span>
+      </a>
+      <a class="nav-item" data-nav="editor" href="editor.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="9" x2="11" y2="9"/></svg>
+        <span>简历编辑</span>
+      </a>
+      <a class="nav-item" data-nav="agents" href="agents.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        <span>AI Agents</span>
+      </a>
+      <a class="nav-item" data-nav="ai-assist" href="ai-assist.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <span>智能补齐</span>
+      </a>
+      <div class="nav-section-label">管理</div>
+      <a class="nav-item" data-nav="versions" href="versions.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+        <span>版本管理</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">龚</div>
+        <div class="user-info">
+          <div class="user-name">龚芝雄</div>
+          <div class="user-role">高级工程师</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="app-main">
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="page-title">AI Agents</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openCreateModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          新建 Agent
+        </button>
+        <button class="btn btn-ghost btn-icon" title="通知">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="设置">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content page-animate">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-bar-left">
+          <div class="search-input-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="form-input" id="search-input" placeholder="按名称搜索 Agent..." oninput="filterAgents()">
+          </div>
+          <select class="form-select filter-select" id="status-filter" onchange="filterAgents()">
+            <option value="all">全部状态</option>
+            <option value="active">活跃</option>
+            <option value="inactive">未激活</option>
+          </select>
+          <select class="form-select filter-select" id="provider-filter" onchange="filterAgents()">
+            <option value="all">全部提供商</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google</option>
+            <option value="local">本地</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Agent Grid -->
+      <div class="agent-grid" id="agent-grid">
+        <!-- Agent cards will be populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Agent Modal -->
+  <div class="modal-overlay" id="agent-modal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <span id="modal-title">新建 Agent</span>
+        </div>
+        <button class="modal-close" onclick="closeAgentModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="agent-form" onsubmit="handleSaveAgent(event)">
+          <input type="hidden" id="agent-id">
+
+          <div class="form-group">
+            <label class="form-label" for="agent-name">Agent 名称 <span class="required">*</span></label>
+            <input type="text" class="form-input" id="agent-name" placeholder="请输入 Agent 名称" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="agent-description">描述</label>
+            <textarea class="form-textarea" id="agent-description" placeholder="请输入 Agent 描述" rows="2"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="agent-provider">提供商 <span class="required">*</span></label>
+              <select class="form-select" id="agent-provider" onchange="updateModelOptions()" required>
+                <option value="">请选择提供商</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="agent-model">模型 <span class="required">*</span></label>
+              <select class="form-select" id="agent-model" required>
+                <option value="">请先选择提供商</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="agent-api-key">API Key <span class="required">*</span></label>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="agent-api-key" placeholder="请输入 API Key" required>
+              <button type="button" class="password-toggle" onclick="toggleApiKeyVisibility()" title="显示/隐藏">
+                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="agent-base-url">API Base URL</label>
+            <input type="text" class="form-input" id="agent-base-url" placeholder="https://api.example.com/v1">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="agent-max-tokens">最大 Token 数</label>
+              <input type="number" class="form-input" id="agent-max-tokens" placeholder="4096" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="agent-token-limit">Token 配额上限</label>
+              <input type="number" class="form-input" id="agent-token-limit" placeholder="1000000" min="0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Temperature</label>
+            <div class="temperature-control">
+              <input type="range" id="agent-temp-range" min="0" max="2" step="0.1" value="0.7" oninput="syncTemperature('range')">
+              <span class="temperature-value" id="agent-temp-display">0.7</span>
+              <input type="number" id="agent-temp-number" min="0" max="2" step="0.1" value="0.7" class="form-input" style="width: 80px;" oninput="syncTemperature('number')">
+            </div>
+            <div class="form-hint">0 = 精确，2 = 创造性强</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="agent-system-prompt">System Prompt</label>
+            <textarea class="form-textarea" id="agent-system-prompt" placeholder="定义 Agent 的角色、能力和行为规范..." rows="4"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAgentModal()">取消</button>
+        <button class="btn btn-primary" onclick="handleSaveAgent(event)">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal confirm-modal">
+      <div class="modal-body" style="padding-top: var(--space-8);">
+        <div class="confirm-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+        </div>
+        <div class="confirm-title">确认删除</div>
+        <div class="confirm-message" id="delete-message">确定要删除这个 Agent 吗？此操作不可撤销。</div>
+        <div class="flex justify-center gap-3">
+          <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+          <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">确认删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    // ========== State ==========
+    let currentEditId = null;
+    let deleteTargetId = null;
+    let apiKeyVisible = false;
+
+    // ========== Init ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderAgentGrid();
+      initProviderOptions();
+    });
+
+    // ========== Provider Icons (inline SVGs) ==========
+    const PROVIDER_ICONS = {
+      openai: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>',
+      anthropic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
+      google: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
+      local: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M12 2v6"/><path d="M8 2v6"/><path d="M16 2v6"/></svg>',
+      custom: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
+    };
+
+    const PROVIDER_NAMES = {
+      openai: 'OpenAI',
+      anthropic: 'Anthropic',
+      google: 'Google Gemini',
+      local: '本地模型',
+      custom: '自定义 API'
+    };
+
+    // ========== Render Agent Grid ==========
+    function renderAgentGrid() {
+      const container = document.getElementById('agent-grid');
+      const agents = getFilteredAgents();
+
+      if (agents.length === 0) {
+        container.innerHTML = `
+          <div class="agent-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+            <div class="agent-empty-title">暂无 Agent</div>
+            <div class="agent-empty-desc">点击右上角「新建 Agent」创建你的第一个 AI Agent</div>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+              新建 Agent
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = agents.map(agent => {
+        const usagePercent = Math.min(100, Math.round((agent.usedTokens / agent.tokenLimit) * 100));
+        const providerIcon = PROVIDER_ICONS[agent.provider] || PROVIDER_ICONS.custom;
+        const providerName = PROVIDER_NAMES[agent.provider] || agent.provider;
+
+        return `
+          <div class="agent-card">
+            <div class="agent-card-header">
+              <div class="agent-name">${escapeHtml(agent.name)}</div>
+              <span class="tag ${agent.status === 'active' ? 'tag-success' : 'tag-default'}">
+                <span class="tag-dot"></span>${agent.status === 'active' ? '活跃' : '未激活'}
+              </span>
+            </div>
+            <div class="agent-description">${escapeHtml(agent.description)}</div>
+            <div class="agent-provider">
+              <span class="agent-provider-icon">${providerIcon}</span>
+              <span>${providerName} · ${escapeHtml(agent.model)}</span>
+            </div>
+            <div class="agent-token-section">
+              <div class="agent-token-label">
+                <span>Token 使用</span>
+                <span>${agent.usedTokens.toLocaleString()} / ${agent.tokenLimit.toLocaleString()}</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: ${usagePercent}%;"></div>
+              </div>
+            </div>
+            <div class="agent-actions">
+              <div class="agent-actions-left">
+                <button class="btn btn-secondary btn-sm" onclick="openEditModal('${agent.id}')" title="编辑">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                  编辑
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="openDeleteModal('${agent.id}')" title="删除" style="color: var(--color-danger); border-color: rgba(248, 113, 113, 0.3);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  删除
+                </button>
+              </div>
+              <div class="toggle ${agent.status === 'active' ? 'active' : ''}" onclick="toggleAgentStatus('${agent.id}')" title="${agent.status === 'active' ? '点击停用' : '点击启用'}">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ========== Filtering ==========
+    function getFilteredAgents() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const statusFilter = document.getElementById('status-filter').value;
+      const providerFilter = document.getElementById('provider-filter').value;
+
+      return window.DB.agents.filter(agent => {
+        const matchesSearch = agent.name.toLowerCase().includes(searchTerm);
+        const matchesStatus = statusFilter === 'all' || agent.status === statusFilter;
+        const matchesProvider = providerFilter === 'all' || agent.provider === providerFilter;
+        return matchesSearch && matchesStatus && matchesProvider;
+      });
+    }
+
+    function filterAgents() {
+      renderAgentGrid();
+    }
+
+    // ========== Provider & Model Options ==========
+    function initProviderOptions() {
+      const providerSelect = document.getElementById('agent-provider');
+      const providers = window.DB.llmProviders;
+
+      providerSelect.innerHTML = '<option value="">请选择提供商</option>' +
+        providers.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+
+    function updateModelOptions() {
+      const providerId = document.getElementById('agent-provider').value;
+      const modelSelect = document.getElementById('agent-model');
+
+      if (!providerId) {
+        modelSelect.innerHTML = '<option value="">请先选择提供商</option>';
+        return;
+      }
+
+      const provider = window.DB.llmProviders.find(p => p.id === providerId);
+      if (provider) {
+        modelSelect.innerHTML = '<option value="">请选择模型</option>' +
+          provider.models.map(m => `<option value="${m.id}">${m.name} (${m.description})</option>`).join('');
+
+        // Auto-fill base URL if available
+        if (provider.baseUrl && !document.getElementById('agent-base-url').value) {
+          document.getElementById('agent-base-url').value = provider.baseUrl;
+        }
+      }
+    }
+
+    // ========== Create / Edit Modal ==========
+    function openCreateModal() {
+      currentEditId = null;
+      document.getElementById('modal-title').textContent = '新建 Agent';
+      document.getElementById('agent-form').reset();
+      document.getElementById('agent-id').value = '';
+      initProviderOptions();
+      document.getElementById('agent-model').innerHTML = '<option value="">请先选择提供商</option>';
+      syncTemperature('range');
+      apiKeyVisible = false;
+      updateEyeIcon();
+      document.getElementById('agent-api-key').type = 'password';
+      openModal('agent-modal');
+    }
+
+    function openEditModal(agentId) {
+      const agent = window.DB.agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      currentEditId = agentId;
+      document.getElementById('modal-title').textContent = '编辑 Agent';
+      document.getElementById('agent-id').value = agent.id;
+      document.getElementById('agent-name').value = agent.name;
+      document.getElementById('agent-description').value = agent.description;
+
+      // Set provider and model
+      initProviderOptions();
+      document.getElementById('agent-provider').value = agent.provider;
+      updateModelOptions();
+      document.getElementById('agent-model').value = agent.model;
+
+      document.getElementById('agent-api-key').value = agent.apiKey;
+      document.getElementById('agent-base-url').value = agent.baseUrl || '';
+      document.getElementById('agent-max-tokens').value = agent.maxTokens || '';
+      document.getElementById('agent-token-limit').value = agent.tokenLimit || '';
+
+      // Temperature
+      document.getElementById('agent-temp-range').value = agent.temperature;
+      document.getElementById('agent-temp-number').value = agent.temperature;
+      document.getElementById('agent-temp-display').textContent = agent.temperature.toFixed(1);
+
+      document.getElementById('agent-system-prompt').value = agent.systemPrompt || '';
+
+      apiKeyVisible = false;
+      updateEyeIcon();
+      document.getElementById('agent-api-key').type = 'password';
+
+      openModal('agent-modal');
+    }
+
+    function closeAgentModal() {
+      closeModal('agent-modal');
+      currentEditId = null;
+    }
+
+    // ========== Save Agent ==========
+    async function handleSaveAgent(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('agent-name').value.trim();
+      const provider = document.getElementById('agent-provider').value;
+      const model = document.getElementById('agent-model').value;
+      const apiKey = document.getElementById('agent-api-key').value.trim();
+
+      if (!name || !provider || !model || !apiKey) {
+        window.API.showToast('请填写必填项', 'error');
+        return;
+      }
+
+      const agentData = {
+        name,
+        description: document.getElementById('agent-description').value.trim(),
+        provider,
+        model,
+        apiKey,
+        baseUrl: document.getElementById('agent-base-url').value.trim(),
+        maxTokens: parseInt(document.getElementById('agent-max-tokens').value) || 4096,
+        temperature: parseFloat(document.getElementById('agent-temp-range').value) || 0.7,
+        systemPrompt: document.getElementById('agent-system-prompt').value.trim(),
+        tokenLimit: parseInt(document.getElementById('agent-token-limit').value) || 1000000,
+        status: 'active'
+      };
+
+      let result;
+      if (currentEditId) {
+        result = await window.API.updateAgent(currentEditId, agentData);
+      } else {
+        result = await window.API.createAgent(agentData);
+      }
+
+      if (result.code === 0) {
+        closeAgentModal();
+        renderAgentGrid();
+        window.API.showToast(currentEditId ? 'Agent 更新成功' : 'Agent 创建成功', 'success');
+      } else {
+        window.API.showToast(result.message || '操作失败', 'error');
+      }
+    }
+
+    // ========== Toggle Status ==========
+    async function toggleAgentStatus(agentId) {
+      const agent = window.DB.agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      const newStatus = agent.status === 'active' ? 'inactive' : 'active';
+      const result = await window.API.updateAgent(agentId, { status: newStatus });
+
+      if (result.code === 0) {
+        renderAgentGrid();
+        window.API.showToast(
+          newStatus === 'active' ? 'Agent 已启用' : 'Agent 已停用',
+          'success'
+        );
+      }
+    }
+
+    // ========== Delete Modal ==========
+    function openDeleteModal(agentId) {
+      deleteTargetId = agentId;
+      const agent = window.DB.agents.find(a => a.id === agentId);
+      if (agent) {
+        document.getElementById('delete-message').textContent =
+          `确定要删除「${agent.name}」吗？此操作不可撤销。`;
+      }
+      openModal('delete-modal');
+    }
+
+    function closeDeleteModal() {
+      closeModal('delete-modal');
+      deleteTargetId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deleteTargetId) return;
+
+      const result = await window.API.deleteAgent(deleteTargetId);
+      if (result.code === 0) {
+        closeDeleteModal();
+        renderAgentGrid();
+        window.API.showToast('Agent 已删除', 'success');
+      } else {
+        window.API.showToast(result.message || '删除失败', 'error');
+      }
+    }
+
+    // ========== Temperature Sync ==========
+    function syncTemperature(source) {
+      const range = document.getElementById('agent-temp-range');
+      const number = document.getElementById('agent-temp-number');
+      const display = document.getElementById('agent-temp-display');
+
+      if (source === 'range') {
+        number.value = range.value;
+      } else {
+        let val = parseFloat(number.value);
+        if (isNaN(val)) val = 0;
+        val = Math.max(0, Math.min(2, val));
+        range.value = val;
+      }
+      display.textContent = parseFloat(range.value).toFixed(1);
+    }
+
+    // ========== API Key Visibility Toggle ==========
+    function toggleApiKeyVisibility() {
+      apiKeyVisible = !apiKeyVisible;
+      const input = document.getElementById('agent-api-key');
+      input.type = apiKeyVisible ? 'text' : 'password';
+      updateEyeIcon();
+    }
+
+    function updateEyeIcon() {
+      const icon = document.getElementById('eye-icon');
+      if (apiKeyVisible) {
+        icon.innerHTML = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
+      } else {
+        icon.innerHTML = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
+
+    // ========== Utility ==========
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

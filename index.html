@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仪表盘 - Resume AI Manager</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="dashboard">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">RA</div>
+      <div>
+        <div class="brand-name">Resume AI</div>
+        <div class="brand-sub">智能简历管理</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">主菜单</div>
+      <a class="nav-item" data-nav="dashboard" href="index.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>仪表盘</span>
+      </a>
+      <a class="nav-item" data-nav="editor" href="editor.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="9" x2="11" y2="9"/></svg>
+        <span>简历编辑</span>
+      </a>
+      <a class="nav-item" data-nav="agents" href="agents.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        <span>AI Agents</span>
+      </a>
+      <a class="nav-item" data-nav="ai-assist" href="ai-assist.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <span>智能补齐</span>
+      </a>
+      <div class="nav-section-label">管理</div>
+      <a class="nav-item" data-nav="versions" href="versions.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+        <span>版本管理</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">龚</div>
+        <div class="user-info">
+          <div class="user-name">龚芝雄</div>
+          <div class="user-role">高级工程师</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="app-main">
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="page-title">仪表盘</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-ghost btn-icon" title="通知">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="设置">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content page-animate">
+      <!-- Welcome Banner -->
+      <div class="card mb-6" style="background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(96, 165, 250, 0.1)); border-color: rgba(34, 211, 238, 0.3);">
+        <div class="card-body">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-semibold mb-2">欢迎回来，龚芝雄 👋</h2>
+              <p class="text-sub">你当前的简历版本是 <span class="text-primary font-semibold">v1.2.0</span>，上次更新于 2026-09-25。</p>
+            </div>
+            <div class="flex gap-3">
+              <a href="editor.html" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                编辑简历
+              </a>
+              <a href="ai-assist.html" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                AI 智能优化
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+          </div>
+          <div class="stat-value" id="stat-versions">5</div>
+          <div class="stat-label">简历版本</div>
+          <div class="stat-trend up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <span>+2 本月</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(52, 211, 153, 0.12);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #34d399;"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          </div>
+          <div class="stat-value" id="stat-agents">4</div>
+          <div class="stat-label">活跃 Agent</div>
+          <div class="stat-trend up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <span>+1 本周</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(251, 191, 36, 0.12);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #fbbf24;"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="stat-value" id="stat-tokens">329,900</div>
+          <div class="stat-label">Token 使用量</div>
+          <div class="progress mt-2">
+            <div class="progress-bar" style="width: 18%;"></div>
+          </div>
+          <div class="text-xs text-muted mt-1">占总配额 18%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(96, 165, 250, 0.12);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #60a5fa;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          </div>
+          <div class="stat-value" id="stat-projects">5</div>
+          <div class="stat-label">核心项目</div>
+          <div class="stat-trend up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <span>3,850 字</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid-2 gap-6">
+        <!-- Recent Versions -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+              最近版本
+            </h3>
+            <a href="versions.html" class="text-sm text-primary">查看全部 →</a>
+          </div>
+          <div class="card-body">
+            <div class="space-y-4" id="recent-versions-list">
+              <!-- Versions will be populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              最近动态
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="timeline" id="activity-timeline">
+              <!-- Activities will be populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Agents Overview -->
+      <div class="card mt-6">
+        <div class="card-header">
+          <h3 class="card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+            AI Agent 概览
+          </h3>
+          <a href="agents.html" class="text-sm text-primary">管理 Agents →</a>
+        </div>
+        <div class="card-body">
+          <div class="grid-3" id="agents-overview">
+            <!-- Agent cards will be populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card mt-6">
+        <div class="card-header">
+          <h3 class="card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            快捷操作
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="grid-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+            <a href="ai-assist.html?target=project" class="btn btn-secondary" style="flex-direction: column; height: auto; padding: 20px; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              <span class="text-base font-medium">AI 优化项目</span>
+              <span class="text-xs text-muted">智能优化项目描述</span>
+            </a>
+            <a href="editor.html#projects" class="btn btn-secondary" style="flex-direction: column; height: auto; padding: 20px; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-success);"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              <span class="text-base font-medium">新增项目</span>
+              <span class="text-xs text-muted">添加项目经历</span>
+            </a>
+            <a href="agents.html" class="btn btn-secondary" style="flex-direction: column; height: auto; padding: 20px; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-info);"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+              <span class="text-base font-medium">配置 Agent</span>
+              <span class="text-xs text-muted">管理 LLM 配置</span>
+            </a>
+            <a href="versions.html" class="btn btn-secondary" style="flex-direction: column; height: auto; padding: 20px; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-warning);"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              <span class="text-base font-medium">版本对比</span>
+              <span class="text-xs text-muted">查看历史变更</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    // Load dashboard data
+    document.addEventListener('DOMContentLoaded', async function() {
+      const result = await window.API.fetchDashboardStats();
+      if (result.code === 0) {
+        const stats = result.data;
+        
+        // Update stats
+        document.getElementById('stat-versions').textContent = stats.totalVersions;
+        document.getElementById('stat-agents').textContent = stats.activeAgents;
+        document.getElementById('stat-tokens').textContent = stats.totalTokensUsed.toLocaleString();
+        document.getElementById('stat-projects').textContent = stats.projectsCount;
+        
+        // Render recent versions
+        renderRecentVersions();
+        
+        // Render activity timeline
+        renderActivities(stats.activities);
+        
+        // Render agents overview
+        renderAgentsOverview();
+      }
+    });
+
+    function renderRecentVersions() {
+      const container = document.getElementById('recent-versions-list');
+      const versions = window.DB.versions.slice(0, 3);
+      
+      container.innerHTML = versions.map(v => `
+        <div class="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer" onclick="window.location.href='versions.html'">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: var(--color-primary-glow);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/></svg>
+            </div>
+            <div>
+              <div class="font-medium text-sm">${v.version}</div>
+              <div class="text-xs text-muted">${v.changeSummary}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="tag ${v.status === 'published' ? 'tag-success' : v.status === 'archived' ? 'tag-default' : 'tag-warning'}">
+              ${v.status === 'published' ? '已发布' : v.status === 'archived' ? '已归档' : '草稿'}
+            </span>
+            <div class="text-xs text-muted mt-1">${v.createdAt}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderActivities(activities) {
+      const container = document.getElementById('activity-timeline');
+      
+      container.innerHTML = activities.map((act, idx) => {
+        const typeClass = act.type === 'ai' ? '' : act.type === 'version' ? 'success' : act.type === 'agent' ? 'warning' : '';
+        const icon = {
+          ai: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>',
+          version: '<line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 0-9 9"/>',
+          agent: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+          edit: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>'
+        }[act.type] || '';
+        
+        return `
+          <div class="timeline-item ${typeClass}">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">${act.title}</div>
+              <div class="timeline-time">${act.time}</div>
+              <div class="timeline-desc">${act.desc}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAgentsOverview() {
+      const container = document.getElementById('agents-overview');
+      const agents = window.DB.agents.filter(a => a.status === 'active').slice(0, 3);
+      
+      container.innerHTML = agents.map(agent => {
+        const usagePercent = Math.round((agent.usedTokens / agent.tokenLimit) * 100);
+        const providerName = {
+          openai: 'OpenAI',
+          anthropic: 'Anthropic',
+          google: 'Google',
+          local: '本地模型',
+          custom: '自定义'
+        }[agent.provider] || agent.provider;
+        
+        return `
+          <div class="p-4 rounded-lg border transition-all hover:border-cyan-500/50 cursor-pointer" style="background: var(--color-bg-elevated); border-color: var(--color-border);" onclick="window.location.href='ai-assist.html?agent=${agent.id}'">
+            <div class="flex items-center justify-between mb-3">
+              <div class="font-medium">${agent.name}</div>
+              <span class="tag tag-success"><span class="tag-dot"></span>活跃</span>
+            </div>
+            <div class="text-xs text-muted mb-2">${providerName} · ${agent.model}</div>
+            <div class="text-xs text-sub mb-2">${agent.description.substring(0, 40)}...</div>
+            <div class="progress">
+              <div class="progress-bar" style="width: ${usagePercent}%;"></div>
+            </div>
+            <div class="text-xs text-muted mt-1">${agent.usedTokens.toLocaleString()} / ${agent.tokenLimit.toLocaleString()} tokens</div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
