@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: resume-studio-server
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+server:
+  port: 8080

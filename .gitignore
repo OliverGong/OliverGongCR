@@ -1,0 +1,14 @@
+node_modules/
+.next/
+dist/
+coverage/
+target/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+*.log
+minio-data/
+postgres-data/
